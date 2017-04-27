@@ -104,7 +104,6 @@ var func = seq(
 	/*eslint-enable no-use-before-define*/
 	string(')')
 ).map(function(node){
-	console.log(node);
 	//return mkString(node);
 	return node;
 });
@@ -284,7 +283,6 @@ var colListExpression = seq(
 		null
 	)
 ).map(function(node) {
-	console.log(node);
 	var n = node[0];
 	n.alias = (node[1] !== null) ? node[1].alias : null;
 	n.expression += ((node[1] !== null) ? node[1].expression : '');
