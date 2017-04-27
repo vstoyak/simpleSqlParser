@@ -100,16 +100,29 @@ var func = seq(
 	/*eslint-disable no-use-before-define*/
 	opt(lazy(function() {
 		return argList;
-	})).map(mkString),
+	})),
 	/*eslint-enable no-use-before-define*/
 	string(')')
-).map(mkString);
+).map(function(node){
+	console.log(node);
+	//return mkString(node);
+	return node;
+});
 
 // A table.column expression
-var tableAndColumn = seq(
-	colName,
-	string('.'),
-	colName
+var tableAndColumn = alt(
+	seq(
+		colName,
+		string('.'),
+		colName,
+		string('.'),
+		colName
+    ),
+    seq(
+		colName,
+		string('.'),
+		colName
+	)
 );
 
 // An operator
@@ -191,10 +204,14 @@ var expression = seq(
 			};
 		}),
 		func.map(function(node) {
+			var attributes = node[1].map(function(attr){
+				var parts = attr.split(".");
+				return {"table": parts[0], "column": parts[1]};
+			});
 			return {
-				expression: node,
-				table: null,
-				column: null,
+				expression: node.join(""),
+				function: node[0],
+				attributes: attributes
 			};
 		}),
 		colName.map(function(node) {
@@ -267,6 +284,7 @@ var colListExpression = seq(
 		null
 	)
 ).map(function(node) {
+	console.log(node);
 	var n = node[0];
 	n.alias = (node[1] !== null) ? node[1].alias : null;
 	n.expression += ((node[1] !== null) ? node[1].expression : '');
@@ -299,7 +317,19 @@ var tableListExpression = seq(
 	)
 ).map(function(node) {
 	var n = {};
-	n.table = node[0];
+	var table_parts = node[0].split(".");
+	if(table_parts.length === 3) {
+		n.project = table_parts[0];
+		n.database = table_parts[1];
+		n.table = table_parts[2];
+	} else if(table_parts.length === 2) {
+		n.project = table_parts[0];
+		n.database = table_parts[1];
+		n.table = table_parts[2];
+	} else {
+		n.table = table_parts[0];
+	}
+
 	n.alias = (node[1] !== null) ? node[1].alias : null;
 	n.expression = node[0] + ((node[1] !== null) ? node[1].expression : '');
 	return n;
